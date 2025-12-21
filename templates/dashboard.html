@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1>{{ title }}</h1>
+        <div class="sub">Dados via Google Sheets (CSV)</div>
+      </div>
+
+      <form method="get" class="ref-form">
+        <label>Data referência</label>
+        <input type="date" name="ref" value="{{ ref }}">
+        <button class="btn">Aplicar</button>
+      </form>
+    </header>
+
+    {% if error %}
+      <div class="alert">
+        <strong>Erro:</strong> {{ error }}
+        <div class="hint">Dica: confira os nomes das colunas COL_DATA e COL_VALOR no app.py.</div>
+      </div>
+    {% else %}
+
+    <section class="grid">
+      <div class="card">
+        <div class="label">Venda do dia ({{ hoje_str }})</div>
+        <div class="value">{{ v_hoje }}</div>
+        <div class="meta">Ontem: {{ v_ontem }}
+          {% if pct_dia is not none %}
+            <span class="pill {% if pct_dia >= 0 %}up{% else %}down{% endif %}">
+              {{ "%.1f"|format(pct_dia) }}%
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Venda do mês ({{ ini_mes_str }} até {{ hoje_str }})</div>
+        <div class="value">{{ v_mes_atual }}</div>
+        <div class="meta">Mês anterior (mesmo dia): {{ v_mes_ant }}
+          {% if pct_mes is not none %}
+            <span class="pill {% if pct_mes >= 0 %}up{% else %}down{% endif %}">
+              {{ "%.1f"|format(pct_mes) }}%
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card mt">
+      <div class="label">Top 5 dias do mês (por faturamento)</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th style="text-align:right;">Faturamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in top_dias %}
+            <tr>
+              <td>{{ r.data_fmt }}</td>
+              <td style="text-align:right;">{{ r.valor_fmt }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    {% endif %}
+  </div>
+</body>
+</html>
