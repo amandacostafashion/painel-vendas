@@ -33,7 +33,7 @@ body{
   padding-top: 20px; /* desce um pouco o bloco do topo */
 }
 
-/* novo bloco do título (duas linhas e centralizado no mobile) */
+/* bloco do título */
 .title-box{
   text-align: left;      /* desktop */
 }
@@ -41,7 +41,7 @@ body{
 /* linha 1 */
 .title-main{
   margin:0;
-  font-size: 22px;       /* um pouco maior no desktop */
+  font-size: 22px;       /* desktop */
   color: var(--rose);
   letter-spacing: .2px;
   line-height: 1.2;
@@ -104,43 +104,118 @@ body{
   .grid{ grid-template-columns: 1fr; }
 }
 
-/* ===== MOBILE: título em 2 linhas centralizado e mais abaixo ===== */
+/* ===== MOBILE (até 768px): centraliza e ajusta layout ===== */
 @media (max-width: 768px){
   .container{
     padding: 14px;
   }
 
   .header{
-    padding-top: 28px;       /* mais respiro no celular */
-    align-items:flex-start;  /* evita colar no topo */
+    padding-top: 18px;       /* reduz um pouco o topo */
+    align-items:flex-start;
     justify-content:center;
+    margin-bottom: 10px;
   }
 
   .title-box{
     width: 100%;
-    text-align: center;      /* centraliza no mobile */
-    margin-bottom: 10px;
+    text-align: center;
+    margin-bottom: 8px;
   }
 
   .title-main{
-    font-size: 24px;         /* celular maior */
+    font-size: 22px;
+    line-height: 1.15;
   }
 
   .title-sub{
-    font-size: 18px;         /* celular maior */
+    font-size: 16px;
+    margin-top: 2px;
+    line-height: 1.15;
+  }
+
+  .sub{
+    margin-top: 4px;
+    font-size: 11px;
   }
 
   .ref-form{
     width: 100%;
-    justify-content: center; /* centraliza o formulário no mobile */
+    justify-content: center;
     flex-wrap: wrap;
-    gap:10px;
+    gap:8px;
   }
 
   .ref-form label{
     width:100%;
     text-align:center;
     margin-bottom: 0;
+  }
+}
+
+/* ===== MOBILE COMPACTO (até 480px): caber mais na tela ===== */
+@media (max-width: 480px){
+  .container{
+    padding: 12px;
+  }
+
+  .header{
+    padding-top: 12px;      /* bem menor no celular */
+    margin-bottom: 8px;
+  }
+
+  .title-box{
+    margin-bottom: 6px;
+  }
+
+  .title-main{
+    font-size: 18px;        /* reduz título p/ evitar scroll */
+    line-height: 1.12;
+  }
+
+  .title-sub{
+    font-size: 13px;
+    line-height: 1.12;
+  }
+
+  .sub{
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .ref-form input{
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .btn{
+    height: 32px;
+    font-size: 13px;
+    padding: 0 12px;
+  }
+
+  .card{
+    padding: 12px;          /* cards mais compactos */
+  }
+
+  .label{
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .value{
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .meta{
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .table th, .table td{
+    padding: 8px 6px;
+    font-size: 12px;
   }
 }
 
