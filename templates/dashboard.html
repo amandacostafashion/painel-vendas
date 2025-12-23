@@ -23,10 +23,14 @@
       </div>
 
       <form method="get" class="ref-form">
-        <label>Data referência</label>
-        <input type="date" name="ref" value="{{ ref }}">
-        <button class="btn">Aplicar</button>
+        <div class="ref-label">Data referência</div>
+
+        <div class="ref-row">
+          <input type="date" name="ref" value="{{ ref }}">
+          <button class="btn">Aplicar</button>
+        </div>
       </form>
+
 
     </header>
 
@@ -144,4 +148,3 @@
   </div>
 </body>
 </html>
-
