@@ -30,7 +30,7 @@ body{
   justify-content:space-between;
   flex-wrap:wrap;
   margin-bottom: 14px;
-  padding-top: 20px; /* desce um pouco o bloco do topo */
+  padding-top: 18px; /* um pouco menor */
 }
 
 /* bloco do título */
@@ -63,6 +63,7 @@ body{
   margin-top: 6px;
 }
 
+/* ===== FORM (DESKTOP) ===== */
 .ref-form{
   display:flex;
   gap:8px;
@@ -104,121 +105,6 @@ body{
   .grid{ grid-template-columns: 1fr; }
 }
 
-/* ===== MOBILE (até 768px): centraliza e ajusta layout ===== */
-@media (max-width: 768px){
-  .container{
-    padding: 14px;
-  }
-
-  .header{
-    padding-top: 18px;       /* reduz um pouco o topo */
-    align-items:flex-start;
-    justify-content:center;
-    margin-bottom: 10px;
-  }
-
-  .title-box{
-    width: 100%;
-    text-align: center;
-    margin-bottom: 8px;
-  }
-
-  .title-main{
-    font-size: 22px;
-    line-height: 1.15;
-  }
-
-  .title-sub{
-    font-size: 16px;
-    margin-top: 2px;
-    line-height: 1.15;
-  }
-
-  .sub{
-    margin-top: 4px;
-    font-size: 11px;
-  }
-
-  .ref-form{
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap:8px;
-  }
-
-  .ref-form label{
-    width:100%;
-    text-align:center;
-    margin-bottom: 0;
-  }
-}
-
-/* ===== MOBILE COMPACTO (até 480px): caber mais na tela ===== */
-@media (max-width: 480px){
-  .container{
-    padding: 12px;
-  }
-
-  .header{
-    padding-top: 12px;      /* bem menor no celular */
-    margin-bottom: 8px;
-  }
-
-  .title-box{
-    margin-bottom: 6px;
-  }
-
-  .title-main{
-    font-size: 18px;        /* reduz título p/ evitar scroll */
-    line-height: 1.12;
-  }
-
-  .title-sub{
-    font-size: 13px;
-    line-height: 1.12;
-  }
-
-  .sub{
-    font-size: 11px;
-    margin-top: 2px;
-  }
-
-  .ref-form input{
-    height: 32px;
-    font-size: 13px;
-  }
-
-  .btn{
-    height: 32px;
-    font-size: 13px;
-    padding: 0 12px;
-  }
-
-  .card{
-    padding: 12px;          /* cards mais compactos */
-  }
-
-  .label{
-    font-size: 11px;
-    margin-bottom: 6px;
-  }
-
-  .value{
-    font-size: 24px;
-    margin-bottom: 4px;
-  }
-
-  .meta{
-    font-size: 11px;
-    gap: 6px;
-  }
-
-  .table th, .table td{
-    padding: 8px 6px;
-    font-size: 12px;
-  }
-}
-
 /* ===== CARDS ===== */
 .card{
   background: var(--card);
@@ -248,6 +134,7 @@ body{
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
+  line-height: 1.35;
 }
 
 .pill{
@@ -289,4 +176,151 @@ body{
   margin-top: 6px;
   color: var(--muted);
   font-size: 12px;
+}
+
+/* =========================================================
+   MOBILE (até 768px): centraliza header e reorganiza form
+   - data à ESQUERDA e botão à DIREITA
+   - tudo mais compacto para caber mais na tela
+   ========================================================= */
+@media (max-width: 768px){
+
+  .container{
+    padding: 12px;
+  }
+
+  .header{
+    padding-top: 10px;
+    margin-bottom: 10px;
+    align-items:flex-start;
+    justify-content:center;
+    gap: 10px;
+  }
+
+  .title-box{
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .title-main{
+    font-size: 20px;
+    line-height: 1.12;
+  }
+
+  .title-sub{
+    font-size: 14px;
+    margin-top: 2px;
+    line-height: 1.12;
+  }
+
+  .sub{
+    margin-top: 2px;
+    font-size: 11px;
+  }
+
+  /* label centralizado e “subindo” o bloco do form */
+  .ref-form{
+    width: 100%;
+    justify-content: space-between; /* ESQ / DIR */
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  .ref-form label{
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  /* input à esquerda e botão à direita */
+  .ref-form input{
+    width: 62%;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .btn{
+    width: 34%;
+    height: 34px;
+    font-size: 13px;
+    padding: 0 10px;
+  }
+
+  /* cards e tabelas mais compactos */
+  .card{
+    padding: 12px;
+  }
+
+  .label{
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .value{
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .meta{
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .mt{
+    margin-top: 8px;
+  }
+
+  .table th, .table td{
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   MOBILE PEQUENO (até 480px): ainda mais compacto
+   ========================================================= */
+@media (max-width: 480px){
+
+  .container{
+    padding: 10px;
+  }
+
+  .header{
+    padding-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  .title-main{
+    font-size: 18px;
+  }
+
+  .title-sub{
+    font-size: 13px;
+  }
+
+  .ref-form input{
+    width: 64%;
+    height: 32px;
+  }
+
+  .btn{
+    width: 32%;
+    height: 32px;
+  }
+
+  .card{
+    padding: 11px;
+  }
+
+  .value{
+    font-size: 23px;
+  }
+
+  .table th, .table td{
+    padding: 7px 6px;
+    font-size: 12px;
+  }
 }
