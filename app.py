@@ -10,6 +10,7 @@ SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToiXxDVpr8cg8r
 # Nomes das colunas no seu CSV
 COL_DATA = "Emissao"
 COL_VALOR = "Total Nota"
+COL_CLIENTE = "Cliente"  # conforme você informou
 
 app = Flask(__name__)
 
@@ -35,6 +36,10 @@ def read_sheet() -> pd.DataFrame:
         raise ValueError(
             f"Coluna de valor '{COL_VALOR}' não encontrada. Colunas disponíveis: {list(df.columns)}"
         )
+    if COL_CLIENTE not in df.columns:
+        raise ValueError(
+            f"Coluna de cliente '{COL_CLIENTE}' não encontrada. Colunas disponíveis: {list(df.columns)}"
+        )
 
     # Converte data (dd/mm/aaaa ou aaaa-mm-dd)
     df[COL_DATA] = pd.to_datetime(df[COL_DATA], errors="coerce", dayfirst=True)
@@ -47,6 +52,9 @@ def read_sheet() -> pd.DataFrame:
         .str.replace(",", ".", regex=False)  # vírgula decimal -> ponto
     )
     df[COL_VALOR] = pd.to_numeric(val, errors="coerce").fillna(0.0)
+
+    # Normaliza cliente
+    df[COL_CLIENTE] = df[COL_CLIENTE].astype(str).str.strip()
 
     # Mantém só linhas com data válida
     df = df[df[COL_DATA].notna()].copy()
@@ -132,8 +140,10 @@ def dashboard():
 
     pct_mes = pct(v_mes_atual, v_mes_ant_proporcional)
 
-    # ===== Top 5 dias do mês atual =====
+    # ===== Recorte do mês atual (até a data de referência) =====
     df_mes = df[(df["data"] >= ini_mes) & (df["data"] <= fim_atual)].copy()
+
+    # ===== Top 5 dias do mês atual =====
     top_dias = (
         df_mes.groupby("data")[COL_VALOR]
         .sum()
@@ -143,6 +153,28 @@ def dashboard():
     )
     top_dias["valor_fmt"] = top_dias[COL_VALOR].apply(to_brl)
     top_dias["data_fmt"] = top_dias["data"].apply(lambda x: x.strftime("%d/%m/%Y"))
+
+    # ===== Top 5 clientes do mês (exceto Consumidor Final) =====
+    df_cli = df_mes.copy()
+
+    # remove clientes vazios
+    df_cli = df_cli[df_cli[COL_CLIENTE].astype(str).str.strip() != ""]
+
+    # remove "CONSUMIDOR FINAL" (qualquer variação de maiúsculas/minúsculas)
+    mask_cf = df_cli[COL_CLIENTE].astype(str).str.upper().str.contains("CONSUMIDOR FINAL", na=False)
+    df_cli = df_cli[~mask_cf].copy()
+
+    top_clientes = (
+        df_cli.groupby(COL_CLIENTE)[COL_VALOR]
+        .sum()
+        .sort_values(ascending=False)
+        .head(5)
+        .reset_index()
+    )
+
+    # padroniza chaves para o HTML
+    top_clientes = top_clientes.rename(columns={COL_CLIENTE: "Cliente"})
+    top_clientes["valor_fmt"] = top_clientes[COL_VALOR].apply(to_brl)
 
     return render_template(
         "dashboard.html",
@@ -173,6 +205,7 @@ def dashboard():
         pct_ano_dia_seguinte=pct_ano_dia_seguinte,
 
         top_dias=top_dias.to_dict(orient="records"),
+        top_clientes=top_clientes.to_dict(orient="records"),
     )
 
 
