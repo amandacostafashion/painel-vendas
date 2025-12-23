@@ -1,11 +1,19 @@
 <!doctype html>
 <html lang="pt-br">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+<header class="header">
+  <div class="title-box">
+    <h1 class="title-main">Acompanhamento de Vendas</h1>
+    <h2 class="title-sub">Amanda Costa Fashion</h2>
+    <div class="sub">Dados via Google Sheets (CSV)</div>
+  </div>
+
+  <form method="get" class="ref-form">
+    <label>Data referência</label>
+    <input type="date" name="ref" value="{{ ref }}">
+    <button class="btn">Aplicar</button>
+  </form>
+</header>
+
 <body>
   <div class="container">
     <header class="header">
