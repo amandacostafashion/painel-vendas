@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Auto-refresh a cada 5 minutos (300s) -->
+  <meta http-equiv="refresh" content="300">
+
   <title>{{ title }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -92,7 +96,7 @@
 
     </section>
 
-    <!-- ===== TOP 5 ===== -->
+    <!-- ===== TOP 5 DIAS ===== -->
     <section class="card mt">
       <div class="label">Top 5 dias do mês (por faturamento)</div>
 
@@ -108,6 +112,28 @@
             <tr>
               <td>{{ r.data_fmt }}</td>
               <td style="text-align:right;">{{ r.valor_fmt }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== TOP 5 CLIENTES ===== -->
+    <section class="card mt">
+      <div class="label">Top 5 clientes do mês (exceto Consumidor Final)</div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th style="text-align:right;">Faturamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in top_clientes %}
+            <tr>
+              <td>{{ r["Cliente"] }}</td>
+              <td style="text-align:right;">{{ r["valor_fmt"] }}</td>
             </tr>
           {% endfor %}
         </tbody>
