@@ -21,6 +21,7 @@ body{
   padding: 18px;
 }
 
+/* ===== HEADER ===== */
 .header{
   display:flex;
   gap:14px;
@@ -28,14 +29,33 @@ body{
   justify-content:space-between;
   flex-wrap:wrap;
   margin-bottom: 14px;
+  padding-top: 20px; /* desce um pouco o bloco do topo */
 }
 
-h1{
+/* novo bloco do título (duas linhas e centralizado no mobile) */
+.title-box{
+  text-align: left;      /* desktop */
+}
+
+/* linha 1 */
+.title-main{
   margin:0;
   font-size: 20px;
   color: var(--rose);
   letter-spacing: .2px;
+  line-height: 1.2;
 }
+
+/* linha 2 */
+.title-sub{
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rose);
+  opacity: 0.95;
+  line-height: 1.2;
+}
+
 .sub{
   color: var(--muted);
   font-size: 12px;
@@ -80,6 +100,34 @@ h1{
 }
 @media (max-width: 780px){
   .grid{ grid-template-columns: 1fr; }
+}
+
+/* ===== MOBILE: título em 2 linhas centralizado e mais abaixo ===== */
+@media (max-width: 768px){
+  .header{
+    padding-top: 28px;       /* mais respiro no celular */
+    align-items:flex-start;  /* evita colar no topo */
+  }
+
+  .title-box{
+    width: 100%;
+    text-align: center;      /* centraliza no mobile */
+    margin-bottom: 10px;
+  }
+
+  .title-main{
+    font-size: 20px;
+  }
+
+  .title-sub{
+    font-size: 15px;
+  }
+
+  .ref-form{
+    width: 100%;
+    justify-content: center; /* centraliza o formulário no mobile */
+    flex-wrap: wrap;
+  }
 }
 
 .card{
