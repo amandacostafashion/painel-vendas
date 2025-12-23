@@ -1,25 +1,21 @@
 <!doctype html>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <html lang="pt-br">
-<header class="header">
-  <div class="title-box">
-    <h1 class="title-main">Acompanhamento de Vendas</h1>
-    <h2 class="title-sub">Amanda Costa Fashion</h2>
-    <div class="sub">Dados via Google Sheets (CSV)</div>
-  </div>
-
-  <form method="get" class="ref-form">
-    <label>Data referência</label>
-    <input type="date" name="ref" value="{{ ref }}">
-    <button class="btn">Aplicar</button>
-  </form>
-</header>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 
 <body>
   <div class="container">
+
+    <!-- ===== HEADER ===== -->
     <header class="header">
-      <div>
-        <h1>{{ title }}</h1>
+
+      <div class="title-box">
+        <h1 class="title-main">Acompanhamento de Vendas</h1>
+        <div class="title-sub">Amanda Costa Fashion</div>
         <div class="sub">Dados via Google Sheets (CSV)</div>
       </div>
 
@@ -28,16 +24,22 @@
         <input type="date" name="ref" value="{{ ref }}">
         <button class="btn">Aplicar</button>
       </form>
+
     </header>
 
     {% if error %}
       <div class="alert">
         <strong>Erro:</strong> {{ error }}
-        <div class="hint">Dica: confira os nomes das colunas COL_DATA e COL_VALOR no app.py.</div>
+        <div class="hint">
+          Dica: confira os nomes das colunas <b>COL_DATA</b> e <b>COL_VALOR</b> no app.py.
+        </div>
       </div>
     {% else %}
 
+    <!-- ===== KPIs ===== -->
     <section class="grid">
+
+      <!-- CARD DIA -->
       <div class="card">
         <div class="label">Venda do dia ({{ hoje_str }})</div>
         <div class="value">{{ v_hoje }}</div>
@@ -61,7 +63,8 @@
         </div>
 
         <div class="meta">
-          Dia seguinte do ano anterior ({{ ano_ant_dia_seguinte_str }}): {{ v_ano_ant_dia_seguinte }}
+          Dia seguinte do ano anterior ({{ ano_ant_dia_seguinte_str }}):
+          {{ v_ano_ant_dia_seguinte }}
           {% if pct_ano_dia_seguinte is not none %}
             <span class="pill {% if pct_ano_dia_seguinte >= 0 %}up{% else %}down{% endif %}">
               {{ "%.1f"|format(pct_ano_dia_seguinte) }}%
@@ -70,9 +73,13 @@
         </div>
       </div>
 
+      <!-- CARD MÊS -->
       <div class="card">
-        <div class="label">Venda do mês ({{ ini_mes_str }} até {{ hoje_str }})</div>
+        <div class="label">
+          Venda do mês ({{ ini_mes_str }} até {{ hoje_str }})
+        </div>
         <div class="value">{{ v_mes_atual }}</div>
+
         <div class="meta">
           Mês anterior (mesmo período): {{ v_mes_ant }}
           {% if pct_mes is not none %}
@@ -82,10 +89,13 @@
           {% endif %}
         </div>
       </div>
+
     </section>
 
+    <!-- ===== TOP 5 ===== -->
     <section class="card mt">
       <div class="label">Top 5 dias do mês (por faturamento)</div>
+
       <table class="table">
         <thead>
           <tr>
@@ -105,7 +115,7 @@
     </section>
 
     {% endif %}
+
   </div>
 </body>
 </html>
-
