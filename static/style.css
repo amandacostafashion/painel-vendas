@@ -8,6 +8,7 @@
 }
 
 *{ box-sizing:border-box; }
+
 body{
   margin:0;
   font-family: Arial, Helvetica, sans-serif;
@@ -40,7 +41,7 @@ body{
 /* linha 1 */
 .title-main{
   margin:0;
-  font-size: 20px;
+  font-size: 22px;       /* um pouco maior no desktop */
   color: var(--rose);
   letter-spacing: .2px;
   line-height: 1.2;
@@ -49,8 +50,8 @@ body{
 /* linha 2 */
 .title-sub{
   margin: 4px 0 0 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--rose);
   opacity: 0.95;
   line-height: 1.2;
@@ -59,7 +60,7 @@ body{
 .sub{
   color: var(--muted);
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .ref-form{
@@ -93,6 +94,7 @@ body{
   cursor: pointer;
 }
 
+/* ===== GRID ===== */
 .grid{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -104,9 +106,14 @@ body{
 
 /* ===== MOBILE: título em 2 linhas centralizado e mais abaixo ===== */
 @media (max-width: 768px){
+  .container{
+    padding: 14px;
+  }
+
   .header{
     padding-top: 28px;       /* mais respiro no celular */
     align-items:flex-start;  /* evita colar no topo */
+    justify-content:center;
   }
 
   .title-box{
@@ -116,20 +123,28 @@ body{
   }
 
   .title-main{
-    font-size: 20px;
+    font-size: 24px;         /* celular maior */
   }
 
   .title-sub{
-    font-size: 15px;
+    font-size: 18px;         /* celular maior */
   }
 
   .ref-form{
     width: 100%;
     justify-content: center; /* centraliza o formulário no mobile */
     flex-wrap: wrap;
+    gap:10px;
+  }
+
+  .ref-form label{
+    width:100%;
+    text-align:center;
+    margin-bottom: 0;
   }
 }
 
+/* ===== CARDS ===== */
 .card{
   background: var(--card);
   border: 1px solid var(--border);
@@ -171,6 +186,7 @@ body{
 
 .mt{ margin-top: 12px; }
 
+/* ===== TABLE ===== */
 .table{
   width:100%;
   border-collapse: collapse;
@@ -187,6 +203,7 @@ body{
   font-weight: 800;
 }
 
+/* ===== ALERT ===== */
 .alert{
   background: rgba(255, 0, 0, 0.10);
   border: 1px solid rgba(255, 0, 0, 0.25);
