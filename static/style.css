@@ -324,3 +324,19 @@ body{
     font-size: 12px;
   }
 }
+/* ===== AJUSTE FINAL HEADER MOBILE ===== */
+@media (max-width: 480px){
+  body{
+    padding-top: 12px; /* descola do topo/status bar */
+  }
+
+  .header{
+    padding-top: 6px;   /* reduz espaço interno do header */
+    margin-bottom: 10px;
+  }
+
+  .title-box{
+    margin-top: 4px;    /* abaixa levemente o título */
+  }
+}
+
