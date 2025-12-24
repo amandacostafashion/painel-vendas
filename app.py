@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request
 import pandas as pd
 from datetime import date, datetime, timedelta
@@ -90,9 +91,15 @@ def pct(a: float, b: float):
 
 @app.get("/")
 def dashboard():
-    # Data de referência (padrão: hoje)
+    # ===== FUSO HORÁRIO (Brasil) =====
+    tz = ZoneInfo("America/Sao_Paulo")
+
+    # Data de referência (padrão: hoje no fuso do Brasil)
     ref_str = request.args.get("ref")  # yyyy-mm-dd
-    ref = datetime.strptime(ref_str, "%Y-%m-%d").date() if ref_str else date.today()
+    if ref_str:
+        ref = datetime.strptime(ref_str, "%Y-%m-%d").date()
+    else:
+        ref = datetime.now(tz).date()
 
     try:
         df = read_sheet()
