@@ -118,8 +118,8 @@ def dashboard():
     hoje = ref
     ontem = ref - timedelta(days=1)
 
-    ano_ant = safe_last_year(ref)  # ex.: 23/12/2024
-    ano_ant_dia_seguinte = ano_ant + timedelta(days=1)  # ex.: 24/12/2024
+    ano_ant = safe_last_year(ref)
+    ano_ant_dia_seguinte = ano_ant + timedelta(days=1)
 
     v_hoje = float(df.loc[df["data"] == hoje, COL_VALOR].sum())
     v_ontem = float(df.loc[df["data"] == ontem, COL_VALOR].sum())
@@ -135,7 +135,6 @@ def dashboard():
     ini_mes_ant = month_start(add_months(ref, -1))
 
     fim_atual = ref
-    # até o mesmo dia do mês anterior (proporcional por dias)
     fim_mes_ant = ini_mes_ant + timedelta(days=max(ref.day - 1, 0))
 
     v_mes_atual = float(
@@ -146,6 +145,15 @@ def dashboard():
     )
 
     pct_mes = pct(v_mes_atual, v_mes_ant_proporcional)
+
+    # ===== MÊS ano anterior proporcional por dias (YoY) =====
+    ini_mes_ano_ant = date(ref.year - 1, ref.month, 1)
+    fim_mes_ano_ant = ini_mes_ano_ant + timedelta(days=max(ref.day - 1, 0))
+
+    v_mes_ano_ant = float(
+        df.loc[(df["data"] >= ini_mes_ano_ant) & (df["data"] <= fim_mes_ano_ant), COL_VALOR].sum()
+    )
+    pct_mes_ano_ant = pct(v_mes_atual, v_mes_ano_ant)
 
     # ===== Recorte do mês atual (até a data de referência) =====
     df_mes = df[(df["data"] >= ini_mes) & (df["data"] <= fim_atual)].copy()
@@ -164,10 +172,7 @@ def dashboard():
     # ===== Top 5 clientes do mês (exceto Consumidor Final) =====
     df_cli = df_mes.copy()
 
-    # remove clientes vazios
     df_cli = df_cli[df_cli[COL_CLIENTE].astype(str).str.strip() != ""]
-
-    # remove "CONSUMIDOR FINAL" (qualquer variação de maiúsculas/minúsculas)
     mask_cf = df_cli[COL_CLIENTE].astype(str).str.upper().str.contains("CONSUMIDOR FINAL", na=False)
     df_cli = df_cli[~mask_cf].copy()
 
@@ -179,7 +184,6 @@ def dashboard():
         .reset_index()
     )
 
-    # padroniza chaves para o HTML
     top_clientes = top_clientes.rename(columns={COL_CLIENTE: "Cliente"})
     top_clientes["valor_fmt"] = top_clientes[COL_VALOR].apply(to_brl)
 
@@ -205,6 +209,11 @@ def dashboard():
 
         v_mes_atual=to_brl(v_mes_atual),
         v_mes_ant=to_brl(v_mes_ant_proporcional),
+
+        # NOVOS CAMPOS (mesmo mês ano anterior)
+        v_mes_ano_ant=to_brl(v_mes_ano_ant),
+        pct_mes_ano_ant=pct_mes_ano_ant,
+        mes_ano_ant_str=ini_mes_ano_ant.strftime("%m/%Y"),
 
         pct_dia=pct_dia,
         pct_mes=pct_mes,
