@@ -30,8 +30,6 @@
           <button class="btn">Aplicar</button>
         </div>
       </form>
-
-
     </header>
 
     {% if error %}
@@ -46,7 +44,7 @@
     <!-- ===== KPIs ===== -->
     <section class="grid">
 
-      <!-- CARD DIA -->
+      <!-- ================= CARD DIA ================= -->
       <div class="card">
         <div class="label">Venda do dia ({{ hoje_str }})</div>
         <div class="value">{{ v_hoje }}</div>
@@ -80,7 +78,7 @@
         </div>
       </div>
 
-      <!-- CARD MÊS -->
+      <!-- ================= CARD MÊS ================= -->
       <div class="card">
         <div class="label">
           Venda do mês ({{ ini_mes_str }} até {{ hoje_str }})
@@ -92,6 +90,16 @@
           {% if pct_mes is not none %}
             <span class="pill {% if pct_mes >= 0 %}up{% else %}down{% endif %}">
               {{ "%.1f"|format(pct_mes) }}%
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- ✅ BLOCO CORRETO: MESMO MÊS DO ANO ANTERIOR -->
+        <div class="meta">
+          Mesmo mês do ano anterior ({{ mes_ano_ant_str }}): {{ v_mes_ano_ant }}
+          {% if pct_mes_ano_ant is not none %}
+            <span class="pill {% if pct_mes_ano_ant >= 0 %}up{% else %}down{% endif %}">
+              {{ "%.1f"|format(pct_mes_ano_ant) }}%
             </span>
           {% endif %}
         </div>
