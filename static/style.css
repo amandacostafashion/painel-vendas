@@ -326,3 +326,348 @@ body{
 .hit-meta{
   background: rgba(0,255,0,0.06);
 }
+:root{
+  --bg:#2b2b2b;        /* cinza escuro */
+  --card:#3a3a3a;
+  --text:#f2f2f2;
+  --muted:#cfcfcf;
+  --rose:#c9a36a;      /* “rose gold” aproximado */
+  --border:rgba(255,255,255,0.10);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+/* ===== HEADER ===== */
+.header{
+  display:flex;
+  gap:14px;
+  align-items:flex-end;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  margin-bottom: 14px;
+  padding-top: 20px; /* desce um pouco o bloco do topo */
+}
+
+/* bloco do título */
+.title-box{
+  text-align: left;      /* desktop */
+}
+
+/* linha 1 */
+.title-main{
+  margin:0;
+  font-size: 22px;       /* desktop */
+  color: var(--rose);
+  letter-spacing: .2px;
+  line-height: 1.2;
+}
+
+/* linha 2 */
+.title-sub{
+  margin: 4px 0 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rose);
+  opacity: 0.95;
+  line-height: 1.2;
+}
+
+.sub{
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.ref-form{
+  display:flex;
+  gap:8px;
+  align-items:flex-end;
+}
+.ref-form label{
+  display:block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.ref-form input{
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.btn{
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(201,163,106,0.35);
+  background: rgba(201,163,106,0.16);
+  color: var(--rose);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 780px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* ===== MOBILE (até 768px): centraliza e ajusta layout ===== */
+@media (max-width: 768px){
+  .container{
+    padding: 14px;
+  }
+
+  .header{
+    padding-top: 18px;       /* reduz um pouco o topo */
+    align-items:flex-start;
+    justify-content:center;
+    margin-bottom: 10px;
+  }
+
+  .title-box{
+    width: 100%;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .title-main{
+    font-size: 22px;
+    line-height: 1.15;
+  }
+
+  .title-sub{
+    font-size: 16px;
+    margin-top: 2px;
+    line-height: 1.15;
+  }
+
+  .sub{
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .ref-form{
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap:8px;
+  }
+
+  .ref-form label{
+    width:100%;
+    text-align:center;
+    margin-bottom: 0;
+  }
+}
+
+/* ===== MOBILE COMPACTO (até 480px): caber mais na tela ===== */
+@media (max-width: 480px){
+  .container{
+    padding: 12px;
+  }
+
+  .header{
+    padding-top: 12px;      /* bem menor no celular */
+    margin-bottom: 8px;
+  }
+
+  .title-box{
+    margin-bottom: 6px;
+  }
+
+  .title-main{
+    font-size: 18px;        /* reduz título p/ evitar scroll */
+    line-height: 1.12;
+  }
+
+  .title-sub{
+    font-size: 13px;
+    line-height: 1.12;
+  }
+
+  .sub{
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .ref-form input{
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .btn{
+    height: 32px;
+    font-size: 13px;
+    padding: 0 12px;
+  }
+
+  .card{
+    padding: 12px;          /* cards mais compactos */
+  }
+
+  .label{
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .value{
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .meta{
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .table th, .table td{
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+}
+
+/* ===== CARDS ===== */
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+
+.label{
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.value{
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.meta{
+  font-size: 12px;
+  color: var(--muted);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.pill{
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+  border: 1px solid var(--border);
+}
+.pill.up{ color: #bff0c1; background: rgba(0,255,0,0.08); }
+.pill.down{ color: #ffb3b3; background: rgba(255,0,0,0.08); }
+
+.mt{ margin-top: 12px; }
+
+/* ===== TABLE ===== */
+.table{
+  width:100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.table th, .table td{
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.table th{
+  color: var(--rose);
+  text-align:left;
+  font-weight: 800;
+}
+
+/* ===== ALERT ===== */
+.alert{
+  background: rgba(255, 0, 0, 0.10);
+  border: 1px solid rgba(255, 0, 0, 0.25);
+  padding: 12px;
+  border-radius: 12px;
+}
+.hint{
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+/* ===== AJUSTE FINAL HEADER MOBILE ===== */
+@media (max-width: 480px){
+  body{
+    padding-top: 12px; /* descola do topo/status bar */
+  }
+
+  .header{
+    padding-top: 6px;   /* reduz espaço interno do header */
+    margin-bottom: 10px;
+  }
+
+  .title-box{
+    margin-top: 4px;    /* abaixa levemente o título */
+  }
+}
+
+/* =========================================================
+   NOVO: estilos do bloco de metas (isolado)
+   ========================================================= */
+.btn.btn-secondary{
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.metas-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.hit-meta{
+  background: rgba(0,255,0,0.06);
+}
+/* ===== FIX: não quebrar valores (R$ 65.000,00) na tabela de metas ===== */
+.table td,
+.table th{
+  white-space: nowrap;   /* impede quebrar linha */
+  word-break: normal;
+}
+
+/* garante que a tabela possa rolar no celular sem “espremer” colunas */
+#cardMetasResumo table{
+  min-width: 640px;      /* ajuste fino: 600~720 conforme gosto */
+}
+
+/* o container já tem overflow:auto no HTML, mas reforça */
+#cardMetasResumo{
+  overflow: hidden;
+}
+
