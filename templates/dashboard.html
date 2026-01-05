@@ -195,9 +195,11 @@
 
   <script>
     function brl(v){
-      v = Number(v || 0);
-      return "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+    v = Number(v || 0);
+    // sem "R$" apenas na tabela de metas
+    return v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
     }
+
     function pct(v){
       v = Number(v || 0);
       return v.toLocaleString("pt-BR", {minimumFractionDigits:1, maximumFractionDigits:1}) + "%";
@@ -273,5 +275,4 @@
   </script>
 </body>
 </html>
-
 
