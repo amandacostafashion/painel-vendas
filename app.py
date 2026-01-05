@@ -1,19 +1,46 @@
 from zoneinfo import ZoneInfo
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from datetime import date, datetime, timedelta
+import calendar
 
 APP_TITLE = "Acompanhamento de Vendas - Amanda Costa Fashion"
 
-# CSV publicado do Google Sheets
+# CSV publicado do Google Sheets (VENDAS)
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToiXxDVpr8cg8rSGdketwsb8rRnYPasZvogJbDunQCtpYvItF0ug9nQZNi6jhxSCZ2kOZqDXgcFDuM/pub?gid=0&single=true&output=csv"
 
-# Nomes das colunas no seu CSV
+# CSV publicado do Google Sheets (FERIADOS) - gid informado por você
+HOLIDAYS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToiXxDVpr8cg8rSGdketwsb8rRnYPasZvogJbDunQCtpYvItF0ug9nQZNi6jhxSCZ2kOZqDXgcFDuM/pub?gid=2066099077&single=true&output=csv"
+
+# Nomes das colunas no seu CSV de vendas
 COL_DATA = "Emissao"
 COL_VALOR = "Total Nota"
-COL_CLIENTE = "Cliente"  # conforme você informou
+COL_CLIENTE = "Cliente"
 
 app = Flask(__name__)
+
+MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
+# =========================
+# METAS (exemplo por ano/mês)
+# =========================
+METAS_POR_ANO = {
+    2026: {
+        1: 65000.00,
+        2: 62000.00,
+        3: 61000.00,
+        4: 78000.00,
+        5: 127000.00,
+        6: 124000.00,
+        7: 115000.00,
+        8: 63000.00,
+        9: 60000.00,
+        10: 84000.00,
+        11: 66000.00,
+        12: 119000.00,
+    }
+}
+METAS_DEFAULT = {m: 0.0 for m in range(1, 13)}
 
 
 def to_brl(v: float) -> str:
@@ -25,7 +52,7 @@ def to_brl(v: float) -> str:
 
 
 def read_sheet() -> pd.DataFrame:
-    """Lê o CSV do Sheets, normaliza colunas e converte tipos."""
+    """Lê o CSV do Sheets (vendas), normaliza colunas e converte tipos."""
     df = pd.read_csv(SHEET_CSV_URL, dtype=str).fillna("")
     df.columns = [c.strip() for c in df.columns]
 
@@ -49,8 +76,8 @@ def read_sheet() -> pd.DataFrame:
     val = df[COL_VALOR].astype(str).str.strip()
     val = (
         val.replace({"R$": "", " ": ""}, regex=True)
-        .str.replace(".", "", regex=False)   # remove milhar pt-br
-        .str.replace(",", ".", regex=False)  # vírgula decimal -> ponto
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
     )
     df[COL_VALOR] = pd.to_numeric(val, errors="coerce").fillna(0.0)
 
@@ -62,6 +89,37 @@ def read_sheet() -> pd.DataFrame:
     return df
 
 
+def read_holidays() -> set[date]:
+    """
+    Lê o CSV de feriados e devolve um set(date).
+    Tenta detectar automaticamente a coluna de data (ex: 'data', 'dia', 'dt', etc).
+    """
+    try:
+        df = pd.read_csv(HOLIDAYS_CSV_URL, dtype=str).fillna("")
+    except Exception:
+        return set()
+
+    df.columns = [str(c).strip() for c in df.columns]
+    if df.empty or len(df.columns) == 0:
+        return set()
+
+    # tenta achar uma coluna de data por nome
+    cols_lower = {c.lower(): c for c in df.columns}
+    candidates = []
+    for key in cols_lower.keys():
+        if "data" in key or "dia" in key or key in ("dt", "date"):
+            candidates.append(cols_lower[key])
+
+    col_date = candidates[0] if candidates else df.columns[0]
+
+    s = df[col_date].astype(str).str.strip()
+    # converte datas (dd/mm/aaaa ou aaaa-mm-dd)
+    dt = pd.to_datetime(s, errors="coerce", dayfirst=True)
+    dt = dt.dropna()
+
+    return set(dt.dt.date.tolist())
+
+
 def month_start(d: date) -> date:
     return d.replace(day=1)
 
@@ -70,7 +128,7 @@ def add_months(d: date, months: int) -> date:
     """Soma/subtrai meses preservando o ano, com dia protegido."""
     y = d.year + (d.month - 1 + months) // 12
     m = (d.month - 1 + months) % 12 + 1
-    day = min(d.day, 28)  # seguro
+    day = min(d.day, 28)
     return date(y, m, day)
 
 
@@ -87,6 +145,182 @@ def pct(a: float, b: float):
     if b == 0:
         return None if a == 0 else 100.0
     return (a / b - 1) * 100.0
+
+
+def get_meta_mes(ano: int, mes: int) -> float:
+    metas_ano = METAS_POR_ANO.get(ano, METAS_DEFAULT)
+    return float(metas_ano.get(mes, 0.0))
+
+
+def iter_dates(ini: date, fim: date):
+    d = ini
+    while d <= fim:
+        yield d
+        d += timedelta(days=1)
+
+
+def is_sunday(d: date) -> bool:
+    # Monday=0 ... Sunday=6
+    return d.weekday() == 6
+
+
+def calc_commercial_days(ano: int, mes: int, feriados: set[date]) -> dict:
+    """
+    Retorna contagens do mês:
+      dias_mes, domingos_mes, feriados_mes (não-domingo), dias_uteis_mes
+    onde dias_uteis_mes = dias_mes - domingos_mes - feriados_mes (que não são domingo).
+    """
+    dias_mes = calendar.monthrange(ano, mes)[1]
+    ini = date(ano, mes, 1)
+    fim = date(ano, mes, dias_mes)
+
+    domingos = 0
+    feriados_no_mes_nao_domingo = 0
+
+    for d in iter_dates(ini, fim):
+        if is_sunday(d):
+            domingos += 1
+
+    # conta feriados do mês que NÃO caem em domingo (pra não subtrair duas vezes)
+    for h in feriados:
+        if h.year == ano and h.month == mes:
+            if not is_sunday(h):
+                feriados_no_mes_nao_domingo += 1
+
+    dias_uteis = dias_mes - domingos - feriados_no_mes_nao_domingo
+    if dias_uteis < 0:
+        dias_uteis = 0
+
+    return {
+        "dias_mes": dias_mes,
+        "domingos_mes": domingos,
+        "feriados_mes": feriados_no_mes_nao_domingo,
+        "dias_uteis_mes": dias_uteis,
+    }
+
+
+def calc_passed_commercial_days(ano: int, mes: int, ref_dt: date, feriados: set[date]) -> int:
+    """
+    Conta quantos dias úteis comerciais já passaram no mês até a data de referência (inclusive),
+    excluindo domingos e feriados.
+    """
+    ini = date(ano, mes, 1)
+    fim = ref_dt
+
+    if fim < ini:
+        return 0
+
+    total = 0
+    for d in iter_dates(ini, fim):
+        if is_sunday(d):
+            continue
+        if d in feriados:
+            continue
+        total += 1
+    return total
+
+
+def sum_vendas_periodo(df: pd.DataFrame, ini: date, fim: date) -> float:
+    return float(df.loc[(df["data"] >= ini) & (df["data"] <= fim), COL_VALOR].sum())
+
+
+@app.get("/api/metas/resumo")
+def api_metas_resumo():
+    """
+    Resumo de metas do ano (Jan até mês da referência):
+    - Projeção por dias úteis comerciais (exclui domingos e feriados)
+    - Mostra também a conta de dias: 31 - 4 - 1 = 26
+    """
+    tz = ZoneInfo("America/Sao_Paulo")
+
+    ref_str = request.args.get("ref", "")
+    if ref_str:
+        ref_dt = datetime.strptime(ref_str, "%Y-%m-%d").date()
+    else:
+        ref_dt = datetime.now(tz).date()
+
+    ano = request.args.get("ano", type=int) or ref_dt.year
+    mes_ref = ref_dt.month
+
+    df = read_sheet()
+    df["data"] = df[COL_DATA].dt.date
+
+    feriados = read_holidays()
+
+    itens = []
+
+    for m in range(1, mes_ref + 1):
+        meta_mes = get_meta_mes(ano, m)
+
+        # período de realizado:
+        ini_mes = date(ano, m, 1)
+        last_day = calendar.monthrange(ano, m)[1]
+        fim_mes = date(ano, m, last_day)
+
+        # se for o mês da referência, soma até ref_dt; caso contrário soma mês fechado
+        fim_realizado = ref_dt if (ano == ref_dt.year and m == ref_dt.month) else fim_mes
+
+        realizado_bruto = sum_vendas_periodo(df, ini_mes, fim_realizado)
+
+        # (neste app não há devoluções separadas)
+        devolucoes = 0.0
+        realizado_liq = max(realizado_bruto - devolucoes, 0.0)
+
+        # contagens do mês (dias úteis comerciais)
+        cnt = calc_commercial_days(ano, m, feriados)
+        dias_mes = cnt["dias_mes"]
+        domingos_mes = cnt["domingos_mes"]
+        feriados_mes = cnt["feriados_mes"]
+        dias_uteis_mes = cnt["dias_uteis_mes"]
+
+        # dias úteis passados até a referência (inclusive, mas domingo/feriado não contam)
+        if ano == ref_dt.year and m == ref_dt.month:
+            dias_passados_uteis = calc_passed_commercial_days(ano, m, ref_dt, feriados)
+        else:
+            # mês fechado: considera todos os dias úteis do mês
+            dias_passados_uteis = dias_uteis_mes
+
+        # projeção por dias úteis (evita divisão por zero)
+        if dias_passados_uteis > 0:
+            media_dia_util = realizado_liq / dias_passados_uteis
+            projecao = media_dia_util * dias_uteis_mes
+        else:
+            media_dia_util = 0.0
+            projecao = 0.0
+
+        falta = max(meta_mes - realizado_liq, 0.0)
+        pct_atingido = (realizado_liq / meta_mes * 100.0) if meta_mes > 0 else 0.0
+        vai_bater = (projecao >= meta_mes) if meta_mes > 0 else False
+
+        resumo_dias_str = (
+            f"{dias_mes} Dias - {domingos_mes} Domingos - {feriados_mes} Feriado(s) = "
+            f"{dias_uteis_mes} Dias úteis comercial"
+        )
+
+        itens.append({
+            "mes_num": m,
+            "mes": MESES[m - 1],
+            "meta": float(meta_mes),
+            "realizado_liq": float(realizado_liq),
+            "falta": float(falta),
+            "pct": float(pct_atingido),
+            "projecao": float(projecao),
+            "vai_bater": bool(vai_bater),
+
+            # novos campos para exibir no front
+            "dias_mes": int(dias_mes),
+            "domingos_mes": int(domingos_mes),
+            "feriados_mes": int(feriados_mes),
+            "dias_uteis_mes": int(dias_uteis_mes),
+            "dias_passados_uteis": int(dias_passados_uteis),
+            "resumo_dias_str": resumo_dias_str,
+        })
+
+    return jsonify({
+        "ano": ano,
+        "ref": ref_dt.isoformat(),
+        "itens": itens
+    })
 
 
 @app.get("/")
@@ -210,7 +444,6 @@ def dashboard():
         v_mes_atual=to_brl(v_mes_atual),
         v_mes_ant=to_brl(v_mes_ant_proporcional),
 
-        # NOVOS CAMPOS (mesmo mês ano anterior)
         v_mes_ano_ant=to_brl(v_mes_ano_ant),
         pct_mes_ano_ant=pct_mes_ano_ant,
         mes_ano_ant_str=ini_mes_ano_ant.strftime("%m/%Y"),
