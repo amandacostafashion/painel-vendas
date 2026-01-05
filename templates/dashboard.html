@@ -238,7 +238,7 @@
         if(ultimo){
           resumoDias.textContent = ultimo.resumo_dias_str || "";
           // opcional: mostrar dias úteis passados usados na média
-          resumoDiasPassados.textContent = `Dias úteis passados (até a referência): ${ultimo.dias_passados_uteis}`;
+          resumoDiasPassados.textContent = `Dias úteis passados: ${ultimo.dias_passados_uteis}`;
         }
 
         data.itens.forEach(it => {
@@ -273,4 +273,5 @@
   </script>
 </body>
 </html>
+
 
