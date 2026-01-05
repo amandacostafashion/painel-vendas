@@ -238,10 +238,12 @@
         // Vamos exibir o resumo do MÊS ATUAL (último item da lista)
         const ultimo = (data.itens && data.itens.length) ? data.itens[data.itens.length - 1] : null;
         if(ultimo){
-          resumoDias.textContent = ultimo.resumo_dias_str || "";
-          // opcional: mostrar dias úteis passados usados na média
-          resumoDiasPassados.textContent = `Dias úteis passados: ${ultimo.dias_passados_uteis}`;
+          const contaMes = ultimo.resumo_dias_str || "";
+          const passados = `Dias úteis passados: ${ultimo.dias_passados_uteis}`;
+          resumoDias.textContent = `${contaMes} | ${passados}`;
+          resumoDiasPassados.textContent = ""; // some com a segunda linha
         }
+
 
         data.itens.forEach(it => {
           const tr = document.createElement("tr");
