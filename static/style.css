@@ -654,20 +654,5 @@ body{
 .hit-meta{
   background: rgba(0,255,0,0.06);
 }
-/* ===== FIX: não quebrar valores (R$ 65.000,00) na tabela de metas ===== */
-.table td,
-.table th{
-  white-space: nowrap;   /* impede quebrar linha */
-  word-break: normal;
-}
 
-/* garante que a tabela possa rolar no celular sem “espremer” colunas */
-#cardMetasResumo table{
-  min-width: 640px;      /* ajuste fino: 600~720 conforme gosto */
-}
-
-/* o container já tem overflow:auto no HTML, mas reforça */
-#cardMetasResumo{
-  overflow: hidden;
-}
 
