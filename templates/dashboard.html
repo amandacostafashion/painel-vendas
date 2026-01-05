@@ -28,6 +28,7 @@
         <div class="ref-row">
           <input type="date" name="ref" value="{{ ref }}">
           <button class="btn">Aplicar</button>
+          <button type="button" class="btn btn-secondary" id="btnMetasResumo">Metas do ano</button>
         </div>
       </form>
     </header>
@@ -41,10 +42,48 @@
       </div>
     {% else %}
 
+    <!-- CARD RESUMO METAS (inicia escondido) -->
+    <section class="card mt" id="cardMetasResumo" style="display:none;">
+      <div class="metas-header">
+        <div class="metas-title">
+          <div class="label" style="margin-bottom:2px;">
+            Metas do ano <span id="metasAno"></span>
+          </div>
+          <div class="meta" style="margin-top:0;">
+            Ref: <span id="metasRef"></span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btnFecharMetas">Fechar</button>
+      </div>
+
+      <div id="metasLoading" class="meta" style="display:none; margin-top:10px;">Carregando…</div>
+      <div id="metasErro" class="meta" style="display:none; margin-top:10px; color:#ffb3b3;"></div>
+
+      <div style="overflow:auto; margin-top:10px;">
+        <table class="table" id="tblMetas">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th style="text-align:right;">Meta</th>
+              <th style="text-align:right;">Realizado</th>
+              <th style="text-align:right;">Falta</th>
+              <th style="text-align:right;">%</th>
+              <th style="text-align:right;">Projeção</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- NOVO: lugar do resumo de dias (entra no lugar da Obs) -->
+      <div class="hint" id="metasResumoDias" style="margin-top:8px;"></div>
+      <div class="hint" id="metasResumoDiasPassados" style="margin-top:4px;"></div>
+    </section>
+
     <!-- ===== KPIs ===== -->
     <section class="grid">
 
-      <!-- ================= CARD DIA ================= -->
+      <!-- CARD DIA -->
       <div class="card">
         <div class="label">Venda do dia ({{ hoje_str }})</div>
         <div class="value">{{ v_hoje }}</div>
@@ -78,7 +117,7 @@
         </div>
       </div>
 
-      <!-- ================= CARD MÊS ================= -->
+      <!-- CARD MÊS -->
       <div class="card">
         <div class="label">
           Venda do mês ({{ ini_mes_str }} até {{ hoje_str }})
@@ -94,7 +133,6 @@
           {% endif %}
         </div>
 
-        <!-- ✅ BLOCO CORRETO: MESMO MÊS DO ANO ANTERIOR -->
         <div class="meta">
           Mesmo mês do ano anterior ({{ mes_ano_ant_str }}): {{ v_mes_ano_ant }}
           {% if pct_mes_ano_ant is not none %}
@@ -107,7 +145,7 @@
 
     </section>
 
-    <!-- ===== TOP 5 DIAS ===== -->
+    <!-- TOP 5 DIAS -->
     <section class="card mt">
       <div class="label">Top 5 dias do mês (por faturamento)</div>
 
@@ -129,7 +167,7 @@
       </table>
     </section>
 
-    <!-- ===== TOP 5 CLIENTES ===== -->
+    <!-- TOP 5 CLIENTES -->
     <section class="card mt">
       <div class="label">Top 5 clientes do mês (exceto Consumidor Final)</div>
 
@@ -154,5 +192,84 @@
     {% endif %}
 
   </div>
+
+  <script>
+    function brl(v){
+      v = Number(v || 0);
+      return "R$ " + v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+    function pct(v){
+      v = Number(v || 0);
+      return v.toLocaleString("pt-BR", {minimumFractionDigits:1, maximumFractionDigits:1}) + "%";
+    }
+
+    async function carregarMetasResumo(){
+      const card = document.getElementById("cardMetasResumo");
+      const loading = document.getElementById("metasLoading");
+      const erro = document.getElementById("metasErro");
+      const tbody = document.querySelector("#tblMetas tbody");
+      const resumoDias = document.getElementById("metasResumoDias");
+      const resumoDiasPassados = document.getElementById("metasResumoDiasPassados");
+
+      tbody.innerHTML = "";
+      erro.style.display = "none";
+      erro.textContent = "";
+      resumoDias.textContent = "";
+      resumoDiasPassados.textContent = "";
+
+      card.style.display = "block";
+      loading.style.display = "block";
+
+      const refInput = document.querySelector('input[name="ref"]');
+      const ref = refInput ? refInput.value : "";
+
+      try{
+        const resp = await fetch(`/api/metas/resumo?ref=${encodeURIComponent(ref)}`, { cache: "no-store" });
+        if(!resp.ok){
+          throw new Error("Falha ao buscar metas (HTTP " + resp.status + ")");
+        }
+        const data = await resp.json();
+
+        document.getElementById("metasAno").textContent = data.ano;
+        document.getElementById("metasRef").textContent = data.ref;
+
+        // Vamos exibir o resumo do MÊS ATUAL (último item da lista)
+        const ultimo = (data.itens && data.itens.length) ? data.itens[data.itens.length - 1] : null;
+        if(ultimo){
+          resumoDias.textContent = ultimo.resumo_dias_str || "";
+          // opcional: mostrar dias úteis passados usados na média
+          resumoDiasPassados.textContent = `Dias úteis passados (até a referência): ${ultimo.dias_passados_uteis}`;
+        }
+
+        data.itens.forEach(it => {
+          const tr = document.createElement("tr");
+          if(it.vai_bater){
+            tr.classList.add("hit-meta");
+          }
+
+          tr.innerHTML = `
+            <td>${it.mes}</td>
+            <td style="text-align:right;">${brl(it.meta)}</td>
+            <td style="text-align:right;">${brl(it.realizado_liq)}</td>
+            <td style="text-align:right;">${brl(it.falta)}</td>
+            <td style="text-align:right;">${pct(it.pct)}</td>
+            <td style="text-align:right;">${brl(it.projecao)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      }catch(e){
+        erro.textContent = e.message || String(e);
+        erro.style.display = "block";
+      }finally{
+        loading.style.display = "none";
+      }
+    }
+
+    document.getElementById("btnMetasResumo")?.addEventListener("click", carregarMetasResumo);
+    document.getElementById("btnFecharMetas")?.addEventListener("click", () => {
+      document.getElementById("cardMetasResumo").style.display = "none";
+    });
+  </script>
 </body>
 </html>
