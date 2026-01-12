@@ -29,6 +29,9 @@
           <input type="date" name="ref" value="{{ ref }}">
           <button class="btn">Aplicar</button>
           <button type="button" class="btn btn-secondary" id="btnMetasResumo">Metas mês</button>
+
+          <!-- BOTÃO COMISSÃO -->
+          <button type="button" class="btn btn-secondary" id="btnComissao">Comissão</button>
         </div>
       </form>
     </header>
@@ -75,9 +78,59 @@
         </table>
       </div>
 
-      <!-- NOVO: lugar do resumo de dias (entra no lugar da Obs) -->
       <div class="hint" id="metasResumoDias" style="margin-top:8px;"></div>
       <div class="hint" id="metasResumoDiasPassados" style="margin-top:4px;"></div>
+    </section>
+
+    <!-- CARD COMISSÃO (inicia escondido) -->
+    <section class="card mt" id="cardComissao" style="display:none;">
+      <div class="metas-header">
+        <div class="metas-title">
+          <div class="label" style="margin-bottom:2px;">Comissão</div>
+          <div class="meta" style="margin-top:0;">
+            Período: <span id="comissaoPeriodo"></span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btnFecharComissao">Fechar</button>
+      </div>
+
+      <div id="comissaoLoading" class="meta" style="display:none; margin-top:10px;">Carregando…</div>
+      <div id="comissaoErro" class="meta" style="display:none; margin-top:10px; color:#ffb3b3;"></div>
+
+      <div class="grid" style="margin-top:10px;">
+        <div class="card" style="margin:0;">
+          <div class="label">Total de vendas</div>
+          <div class="value" id="comissaoTotalVendas">R$ 0,00</div>
+
+          <div class="meta" style="margin-top:8px;">
+            Devoluções:
+            <strong id="comissaoDevolucoes">R$ 0,00</strong>
+          </div>
+
+          <div class="meta" style="margin-top:8px;">
+            Realizado líquido:
+            <strong id="comissaoRealizadoLiquido">R$ 0,00</strong>
+          </div>
+
+          <!-- NOVO: COMISSÕES -->
+          <div class="meta" style="margin-top:8px;">
+            Comissão fixa (2%):
+            <strong id="comissaoFixa2">R$ 0,00</strong>
+          </div>
+
+          <div class="meta" style="margin-top:8px;">
+            Meta variável (0,5%):
+            <strong id="comissaoVariavel05">R$ 0,00</strong>
+          </div>
+
+          <div class="meta" style="margin-top:8px;">
+            Comissão + Meta:
+            <strong id="comissaoTotal">R$ 0,00</strong>
+          </div>
+
+          
+        </div>
+      </div>
     </section>
 
     <!-- ===== KPIs ===== -->
@@ -195,9 +248,9 @@
 
   <script>
     function brl(v){
-    v = Number(v || 0);
-    // sem "R$" apenas na tabela de metas
-    return v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+      v = Number(v || 0);
+      // sem "R$" apenas na tabela de metas
+      return v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
     function pct(v){
@@ -219,6 +272,9 @@
       resumoDias.textContent = "";
       resumoDiasPassados.textContent = "";
 
+      const cardCom = document.getElementById("cardComissao");
+      if(cardCom) cardCom.style.display = "none";
+
       card.style.display = "block";
       loading.style.display = "block";
 
@@ -235,15 +291,13 @@
         document.getElementById("metasAno").textContent = data.ano;
         document.getElementById("metasRef").textContent = data.ref;
 
-        // Vamos exibir o resumo do MÊS ATUAL (último item da lista)
         const ultimo = (data.itens && data.itens.length) ? data.itens[data.itens.length - 1] : null;
         if(ultimo){
           const contaMes = ultimo.resumo_dias_str || "";
-          const passados = `Dias passados: ${ultimo.dias_passados_uteis}`;
+          const passados = `Dias úteis passados: ${ultimo.dias_passados_uteis}`;
           resumoDias.textContent = `${contaMes} | ${passados}`;
-          resumoDiasPassados.textContent = ""; // some com a segunda linha
+          resumoDiasPassados.textContent = "";
         }
-
 
         data.itens.forEach(it => {
           const tr = document.createElement("tr");
@@ -270,12 +324,96 @@
       }
     }
 
+    async function carregarComissao(){
+      const card = document.getElementById("cardComissao");
+      const loading = document.getElementById("comissaoLoading");
+      const erro = document.getElementById("comissaoErro");
+
+      const totalEl = document.getElementById("comissaoTotalVendas");
+      const devolEl = document.getElementById("comissaoDevolucoes");
+      const liqEl = document.getElementById("comissaoRealizadoLiquido");
+
+      const fixaEl = document.getElementById("comissaoFixa2");
+      const varEl = document.getElementById("comissaoVariavel05");
+      const totalComEl = document.getElementById("comissaoTotal");
+
+      const periodoEl = document.getElementById("comissaoPeriodo");
+
+      const cardMetas = document.getElementById("cardMetasResumo");
+      if(cardMetas) cardMetas.style.display = "none";
+
+      erro.style.display = "none";
+      erro.textContent = "";
+
+      if(totalEl) totalEl.textContent = "R$ 0,00";
+      if(devolEl) devolEl.textContent = "R$ 0,00";
+      if(liqEl) liqEl.textContent = "R$ 0,00";
+      if(fixaEl) fixaEl.textContent = "R$ 0,00";
+      if(varEl) varEl.textContent = "R$ 0,00";
+      if(totalComEl) totalComEl.textContent = "R$ 0,00";
+      if(periodoEl) periodoEl.textContent = "";
+
+      card.style.display = "block";
+      loading.style.display = "block";
+
+      const refInput = document.querySelector('input[name="ref"]');
+      const ref = refInput ? refInput.value : "";
+
+      try{
+        const resp = await fetch(`/api/comissao/total?ref=${encodeURIComponent(ref)}`, { cache: "no-store" });
+        if(!resp.ok){
+          throw new Error("Falha ao buscar comissão (HTTP " + resp.status + ")");
+        }
+        const data = await resp.json();
+
+        if(periodoEl){
+          const ini = data?.periodo?.ini || "";
+          const fim = data?.periodo?.fim || data?.ref || "";
+          periodoEl.textContent = `${ini} até ${fim}`;
+        }
+
+        if(totalEl){
+          totalEl.textContent = data.total_vendas_fmt || ("R$ " + brl(data.total_vendas));
+        }
+
+        if(devolEl){
+          devolEl.textContent = data.total_devolucoes_fmt || ("R$ " + brl(data.total_devolucoes));
+        }
+
+        if(liqEl){
+          liqEl.textContent = data.realizado_liquido_fmt || ("R$ " + brl(data.realizado_liquido));
+        }
+
+        // NOVO: comissões (retornadas pela API)
+        if(fixaEl){
+          fixaEl.textContent = data.comissao_fixa_2pct_fmt || ("R$ " + brl(data.comissao_fixa_2pct));
+        }
+
+        if(varEl){
+          varEl.textContent = data.comissao_variavel_0_5pct_fmt || ("R$ " + brl(data.comissao_variavel_0_5pct));
+        }
+
+        if(totalComEl){
+          totalComEl.textContent = data.comissao_total_fmt || ("R$ " + brl(data.comissao_total));
+        }
+
+      }catch(e){
+        erro.textContent = e.message || String(e);
+        erro.style.display = "block";
+      }finally{
+        loading.style.display = "none";
+      }
+    }
+
     document.getElementById("btnMetasResumo")?.addEventListener("click", carregarMetasResumo);
     document.getElementById("btnFecharMetas")?.addEventListener("click", () => {
       document.getElementById("cardMetasResumo").style.display = "none";
     });
+
+    document.getElementById("btnComissao")?.addEventListener("click", carregarComissao);
+    document.getElementById("btnFecharComissao")?.addEventListener("click", () => {
+      document.getElementById("cardComissao").style.display = "none";
+    });
   </script>
 </body>
 </html>
-
-
