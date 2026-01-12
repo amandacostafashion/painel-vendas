@@ -82,7 +82,7 @@
       <div class="hint" id="metasResumoDiasPassados" style="margin-top:4px;"></div>
     </section>
 
-    <!-- CARD COMISSÃO (inicia escondido) -->
+    <!-- CARD COMISSÃO (compacto) -->
     <section class="card mt" id="cardComissao" style="display:none;">
       <div class="metas-header">
         <div class="metas-title">
@@ -97,38 +97,56 @@
       <div id="comissaoLoading" class="meta" style="display:none; margin-top:10px;">Carregando…</div>
       <div id="comissaoErro" class="meta" style="display:none; margin-top:10px; color:#ffb3b3;"></div>
 
-      <div class="grid" style="margin-top:10px;">
-        <div class="card" style="margin:0;">
-          <div class="label">Total de vendas</div>
-          <div class="value" id="comissaoTotalVendas">R$ 0,00</div>
-
-          <div class="meta" style="margin-top:8px;">
-            Devoluções:
-            <strong id="comissaoDevolucoes">R$ 0,00</strong>
+      <!-- CONTEÚDO COMPACTO -->
+      <div
+        class="card"
+        style="
+          margin-top:10px;
+          padding:12px;
+        "
+      >
+        <div
+          style="
+            display:grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap:10px 14px;
+          "
+        >
+          <!-- LINHA 1 -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Total Venda:</span>
+            <strong class="meta" style="margin:0;" id="comissaoTotalVendas">R$ 0,00</strong>
           </div>
 
-          <div class="meta" style="margin-top:8px;">
-            Realizado líquido:
-            <strong id="comissaoRealizadoLiquido">R$ 0,00</strong>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Devolução:</span>
+            <strong class="meta" style="margin:0;" id="comissaoDevolucoes">R$ 0,00</strong>
           </div>
 
-          <!-- NOVO: COMISSÕES -->
-          <div class="meta" style="margin-top:8px;">
-            Comissão fixa (2%):
-            <strong id="comissaoFixa2">R$ 0,00</strong>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Venda líquida:</span>
+            <strong class="meta" style="margin:0;" id="comissaoRealizadoLiquido">R$ 0,00</strong>
           </div>
 
-          <div class="meta" style="margin-top:8px;">
-            Meta variável (0,5%):
-            <strong id="comissaoVariavel05">R$ 0,00</strong>
+          <!-- LINHA 2 -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Comissão Fix:</span>
+            <strong class="meta" style="margin:0;" id="comissaoFixa">R$ 0,00</strong>
           </div>
 
-          <div class="meta" style="margin-top:8px;">
-            Comissão + Meta:
-            <strong id="comissaoTotal">R$ 0,00</strong>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Meta Variável:</span>
+            <strong class="meta" style="margin:0;" id="comissaoVariavel">R$ 0,00</strong>
           </div>
 
-          
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
+            <span class="meta" style="margin:0;">Comissão + Meta:</span>
+            <strong class="meta" style="margin:0;" id="comissaoTotal">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="hint" style="margin-top:8px;">
+          Valores apurados do mês até a data de referência.
         </div>
       </div>
     </section>
@@ -249,7 +267,6 @@
   <script>
     function brl(v){
       v = Number(v || 0);
-      // sem "R$" apenas na tabela de metas
       return v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
@@ -329,15 +346,15 @@
       const loading = document.getElementById("comissaoLoading");
       const erro = document.getElementById("comissaoErro");
 
+      const periodoEl = document.getElementById("comissaoPeriodo");
+
       const totalEl = document.getElementById("comissaoTotalVendas");
       const devolEl = document.getElementById("comissaoDevolucoes");
       const liqEl = document.getElementById("comissaoRealizadoLiquido");
 
-      const fixaEl = document.getElementById("comissaoFixa2");
-      const varEl = document.getElementById("comissaoVariavel05");
-      const totalComEl = document.getElementById("comissaoTotal");
-
-      const periodoEl = document.getElementById("comissaoPeriodo");
+      const fixaEl = document.getElementById("comissaoFixa");
+      const varEl  = document.getElementById("comissaoVariavel");
+      const totEl  = document.getElementById("comissaoTotal");
 
       const cardMetas = document.getElementById("cardMetasResumo");
       if(cardMetas) cardMetas.style.display = "none";
@@ -345,13 +362,15 @@
       erro.style.display = "none";
       erro.textContent = "";
 
+      if(periodoEl) periodoEl.textContent = "";
+
       if(totalEl) totalEl.textContent = "R$ 0,00";
       if(devolEl) devolEl.textContent = "R$ 0,00";
       if(liqEl) liqEl.textContent = "R$ 0,00";
+
       if(fixaEl) fixaEl.textContent = "R$ 0,00";
-      if(varEl) varEl.textContent = "R$ 0,00";
-      if(totalComEl) totalComEl.textContent = "R$ 0,00";
-      if(periodoEl) periodoEl.textContent = "";
+      if(varEl)  varEl.textContent  = "R$ 0,00";
+      if(totEl)  totEl.textContent  = "R$ 0,00";
 
       card.style.display = "block";
       loading.style.display = "block";
@@ -375,26 +394,22 @@
         if(totalEl){
           totalEl.textContent = data.total_vendas_fmt || ("R$ " + brl(data.total_vendas));
         }
-
         if(devolEl){
           devolEl.textContent = data.total_devolucoes_fmt || ("R$ " + brl(data.total_devolucoes));
         }
-
         if(liqEl){
           liqEl.textContent = data.realizado_liquido_fmt || ("R$ " + brl(data.realizado_liquido));
         }
 
-        // NOVO: comissões (retornadas pela API)
+        // NOVO: comissões (fixa / variável / total)
         if(fixaEl){
           fixaEl.textContent = data.comissao_fixa_2pct_fmt || ("R$ " + brl(data.comissao_fixa_2pct));
         }
-
         if(varEl){
           varEl.textContent = data.comissao_variavel_0_5pct_fmt || ("R$ " + brl(data.comissao_variavel_0_5pct));
         }
-
-        if(totalComEl){
-          totalComEl.textContent = data.comissao_total_fmt || ("R$ " + brl(data.comissao_total));
+        if(totEl){
+          totEl.textContent = data.comissao_total_fmt || ("R$ " + brl(data.comissao_total));
         }
 
       }catch(e){
