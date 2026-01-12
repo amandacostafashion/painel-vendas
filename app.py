@@ -4,6 +4,13 @@ import pandas as pd
 from datetime import date, datetime, timedelta
 import calendar
 
+# CSV publicado do Google Sheets (DEVOLUÇÕES)
+RETURNS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToiXxDVpr8cg8rSGdketwsb8rRnYPasZvogJbDunQCtpYvItF0ug9nQZNi6jhxSCZ2kOZqDXgcFDuM/pub?gid=2063480502&single=true&output=csv"
+
+# Nomes das colunas no CSV de devoluções (ajuste se necessário)
+COL_DEV_DATA = "Data de Entrada"   # ou "Emissao" / "Data" conforme a sua planilha
+COL_DEV_VALOR = "Total Nota"       # valor da devolução
+
 APP_TITLE = "Acompanhamento de Vendas - Amanda Costa Fashion"
 
 # CSV publicado do Google Sheets (VENDAS)
@@ -103,7 +110,6 @@ def read_holidays() -> set[date]:
     if df.empty or len(df.columns) == 0:
         return set()
 
-    # tenta achar uma coluna de data por nome
     cols_lower = {c.lower(): c for c in df.columns}
     candidates = []
     for key in cols_lower.keys():
@@ -113,7 +119,6 @@ def read_holidays() -> set[date]:
     col_date = candidates[0] if candidates else df.columns[0]
 
     s = df[col_date].astype(str).str.strip()
-    # converte datas (dd/mm/aaaa ou aaaa-mm-dd)
     dt = pd.to_datetime(s, errors="coerce", dayfirst=True)
     dt = dt.dropna()
 
@@ -160,16 +165,10 @@ def iter_dates(ini: date, fim: date):
 
 
 def is_sunday(d: date) -> bool:
-    # Monday=0 ... Sunday=6
     return d.weekday() == 6
 
 
 def calc_commercial_days(ano: int, mes: int, feriados: set[date]) -> dict:
-    """
-    Retorna contagens do mês:
-      dias_mes, domingos_mes, feriados_mes (não-domingo), dias_uteis_mes
-    onde dias_uteis_mes = dias_mes - domingos_mes - feriados_mes (que não são domingo).
-    """
     dias_mes = calendar.monthrange(ano, mes)[1]
     ini = date(ano, mes, 1)
     fim = date(ano, mes, dias_mes)
@@ -181,7 +180,6 @@ def calc_commercial_days(ano: int, mes: int, feriados: set[date]) -> dict:
         if is_sunday(d):
             domingos += 1
 
-    # conta feriados do mês que NÃO caem em domingo (pra não subtrair duas vezes)
     for h in feriados:
         if h.year == ano and h.month == mes:
             if not is_sunday(h):
@@ -200,10 +198,6 @@ def calc_commercial_days(ano: int, mes: int, feriados: set[date]) -> dict:
 
 
 def calc_passed_commercial_days(ano: int, mes: int, ref_dt: date, feriados: set[date]) -> int:
-    """
-    Conta quantos dias úteis comerciais já passaram no mês até a data de referência (inclusive),
-    excluindo domingos e feriados.
-    """
     ini = date(ano, mes, 1)
     fim = ref_dt
 
@@ -226,11 +220,6 @@ def sum_vendas_periodo(df: pd.DataFrame, ini: date, fim: date) -> float:
 
 @app.get("/api/metas/resumo")
 def api_metas_resumo():
-    """
-    Resumo de metas do ano (Jan até mês da referência):
-    - Projeção por dias úteis comerciais (exclui domingos e feriados)
-    - Mostra também a conta de dias: 31 - 4 - 1 = 26
-    """
     tz = ZoneInfo("America/Sao_Paulo")
 
     ref_str = request.args.get("ref", "")
@@ -252,40 +241,32 @@ def api_metas_resumo():
     for m in range(1, mes_ref + 1):
         meta_mes = get_meta_mes(ano, m)
 
-        # período de realizado:
         ini_mes = date(ano, m, 1)
         last_day = calendar.monthrange(ano, m)[1]
         fim_mes = date(ano, m, last_day)
 
-        # se for o mês da referência, soma até ref_dt; caso contrário soma mês fechado
         fim_realizado = ref_dt if (ano == ref_dt.year and m == ref_dt.month) else fim_mes
 
         realizado_bruto = sum_vendas_periodo(df, ini_mes, fim_realizado)
 
-        # (neste app não há devoluções separadas)
         devolucoes = 0.0
         realizado_liq = max(realizado_bruto - devolucoes, 0.0)
 
-        # contagens do mês (dias úteis comerciais)
         cnt = calc_commercial_days(ano, m, feriados)
         dias_mes = cnt["dias_mes"]
         domingos_mes = cnt["domingos_mes"]
         feriados_mes = cnt["feriados_mes"]
         dias_uteis_mes = cnt["dias_uteis_mes"]
 
-        # dias úteis passados até a referência (inclusive, mas domingo/feriado não contam)
         if ano == ref_dt.year and m == ref_dt.month:
             dias_passados_uteis = calc_passed_commercial_days(ano, m, ref_dt, feriados)
         else:
-            # mês fechado: considera todos os dias úteis do mês
             dias_passados_uteis = dias_uteis_mes
 
-        # projeção por dias úteis (evita divisão por zero)
         if dias_passados_uteis > 0:
             media_dia_util = realizado_liq / dias_passados_uteis
             projecao = media_dia_util * dias_uteis_mes
         else:
-            media_dia_util = 0.0
             projecao = 0.0
 
         falta = max(meta_mes - realizado_liq, 0.0)
@@ -307,7 +288,6 @@ def api_metas_resumo():
             "projecao": float(projecao),
             "vai_bater": bool(vai_bater),
 
-            # novos campos para exibir no front
             "dias_mes": int(dias_mes),
             "domingos_mes": int(domingos_mes),
             "feriados_mes": int(feriados_mes),
@@ -323,12 +303,129 @@ def api_metas_resumo():
     })
 
 
-@app.get("/")
-def dashboard():
-    # ===== FUSO HORÁRIO (Brasil) =====
+def read_returns_sheet() -> pd.DataFrame:
+    """Lê o CSV do Sheets (devoluções), normaliza colunas e converte tipos."""
+    df = pd.read_csv(RETURNS_CSV_URL, dtype=str).fillna("")
+    df.columns = [c.strip() for c in df.columns]
+
+    if COL_DEV_DATA not in df.columns:
+        raise ValueError(
+            f"Coluna de data devolução '{COL_DEV_DATA}' não encontrada. Colunas disponíveis: {list(df.columns)}"
+        )
+    if COL_DEV_VALOR not in df.columns:
+        raise ValueError(
+            f"Coluna de valor devolução '{COL_DEV_VALOR}' não encontrada. Colunas disponíveis: {list(df.columns)}"
+        )
+
+    df[COL_DEV_DATA] = pd.to_datetime(df[COL_DEV_DATA], errors="coerce", dayfirst=True)
+
+    val = df[COL_DEV_VALOR].astype(str).str.strip()
+    val = (
+        val.replace({"R$": "", " ": ""}, regex=True)
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
+    )
+    df[COL_DEV_VALOR] = pd.to_numeric(val, errors="coerce").fillna(0.0)
+
+    df = df[df[COL_DEV_DATA].notna()].copy()
+    return df
+
+
+@app.get("/api/comissao/total")
+def api_comissao_total():
+    """
+    Retorna:
+    - total_vendas (mês até ref)
+    - total_devolucoes (mês até ref)
+    - realizado_liquido = vendas - devoluções
+    - comissao_fixa_2pct = 2% do líquido
+    - pct_comissao_aplicada = atingimento * 0,5%
+    - comissao_variavel_0_5pct = líquido * pct_comissao_aplicada
+    - comissao_total = fixa + variável
+    """
     tz = ZoneInfo("America/Sao_Paulo")
 
-    # Data de referência (padrão: hoje no fuso do Brasil)
+    ref_str = request.args.get("ref", "")
+    if ref_str:
+        ref_dt = datetime.strptime(ref_str, "%Y-%m-%d").date()
+    else:
+        ref_dt = datetime.now(tz).date()
+
+    ini_mes = month_start(ref_dt)
+    fim = ref_dt
+
+    # ===== VENDAS (CSV vendas) =====
+    df_v = read_sheet()
+    df_v["data"] = df_v[COL_DATA].dt.date
+    total_vendas = float(
+        df_v.loc[(df_v["data"] >= ini_mes) & (df_v["data"] <= fim), COL_VALOR].sum()
+    )
+
+    # ===== DEVOLUÇÕES (CSV devoluções) =====
+    df_d = read_returns_sheet()
+    df_d["data"] = df_d[COL_DEV_DATA].dt.date
+    total_devolucoes = float(
+        df_d.loc[(df_d["data"] >= ini_mes) & (df_d["data"] <= fim), COL_DEV_VALOR].sum()
+    )
+    total_devolucoes_abs = abs(total_devolucoes)
+
+    # ===== REALIZADO LÍQUIDO =====
+    realizado_liquido = max(total_vendas - total_devolucoes_abs, 0.0)
+
+    # ===== META / ATINGIMENTO (atingimento pelo BRUTO, igual seu painel) =====
+    meta_mes = float(get_meta_mes(ref_dt.year, ref_dt.month))
+    atingimento = (total_vendas / meta_mes) if meta_mes > 0 else 0.0  # decimal (ex.: 0.128)
+
+    # ===== COMISSÕES (EXATAMENTE COMO NO PRINT) =====
+    # fixa 2% do líquido
+    comissao_fixa_2pct = realizado_liquido * 0.02
+
+    # variável:
+    # pct_aplicado = atingimento * 0,5%  => atingimento * 0,005
+    base_pct_variavel = 0.005
+    pct_comissao_aplicada = atingimento * base_pct_variavel  # ex.: 0.00064 (0,064%)
+    comissao_variavel_0_5pct = realizado_liquido * pct_comissao_aplicada
+
+    # total
+    comissao_total = comissao_fixa_2pct + comissao_variavel_0_5pct
+
+    return jsonify({
+        "ref": ref_dt.isoformat(),
+        "periodo": {"ini": ini_mes.isoformat(), "fim": fim.isoformat()},
+
+        "total_vendas": total_vendas,
+        "total_vendas_fmt": to_brl(total_vendas),
+
+        "total_devolucoes": total_devolucoes_abs,
+        "total_devolucoes_fmt": to_brl(total_devolucoes_abs),
+
+        "realizado_liquido": realizado_liquido,
+        "realizado_liquido_fmt": to_brl(realizado_liquido),
+
+        # para conferência/uso futuro
+        "meta_mes": meta_mes,
+        "meta_mes_fmt": to_brl(meta_mes),
+        "atingimento": atingimento,                 # 0.128
+        "atingimento_pct": atingimento * 100.0,     # 12.8
+
+        # percentual aplicado (em decimal e em %)
+        "pct_comissao_aplicada": pct_comissao_aplicada,              # 0.00064
+        "pct_comissao_aplicada_pct": pct_comissao_aplicada * 100.0,  # 0.064
+
+        "comissao_fixa_2pct": comissao_fixa_2pct,
+        "comissao_fixa_2pct_fmt": to_brl(comissao_fixa_2pct),
+
+        "comissao_variavel_0_5pct": comissao_variavel_0_5pct,
+        "comissao_variavel_0_5pct_fmt": to_brl(comissao_variavel_0_5pct),
+
+        "comissao_total": comissao_total,
+        "comissao_total_fmt": to_brl(comissao_total),
+    })
+
+@app.get("/")
+def dashboard():
+    tz = ZoneInfo("America/Sao_Paulo")
+
     ref_str = request.args.get("ref")  # yyyy-mm-dd
     if ref_str:
         ref = datetime.strptime(ref_str, "%Y-%m-%d").date()
@@ -345,10 +442,8 @@ def dashboard():
             ref=ref.strftime("%Y-%m-%d"),
         )
 
-    # Coluna auxiliar por dia (date)
     df["data"] = df[COL_DATA].dt.date
 
-    # ===== DIA: hoje / ontem / mesmo dia ano anterior / dia seguinte ano anterior =====
     hoje = ref
     ontem = ref - timedelta(days=1)
 
@@ -364,7 +459,6 @@ def dashboard():
     pct_ano = pct(v_hoje, v_ano_ant)
     pct_ano_dia_seguinte = pct(v_hoje, v_ano_ant_dia_seguinte)
 
-    # ===== MÊS proporcional por dias (MoM) =====
     ini_mes = month_start(ref)
     ini_mes_ant = month_start(add_months(ref, -1))
 
@@ -380,7 +474,6 @@ def dashboard():
 
     pct_mes = pct(v_mes_atual, v_mes_ant_proporcional)
 
-    # ===== MÊS ano anterior proporcional por dias (YoY) =====
     ini_mes_ano_ant = date(ref.year - 1, ref.month, 1)
     fim_mes_ano_ant = ini_mes_ano_ant + timedelta(days=max(ref.day - 1, 0))
 
@@ -389,10 +482,8 @@ def dashboard():
     )
     pct_mes_ano_ant = pct(v_mes_atual, v_mes_ano_ant)
 
-    # ===== Recorte do mês atual (até a data de referência) =====
     df_mes = df[(df["data"] >= ini_mes) & (df["data"] <= fim_atual)].copy()
 
-    # ===== Top 5 dias do mês atual =====
     top_dias = (
         df_mes.groupby("data")[COL_VALOR]
         .sum()
@@ -403,7 +494,6 @@ def dashboard():
     top_dias["valor_fmt"] = top_dias[COL_VALOR].apply(to_brl)
     top_dias["data_fmt"] = top_dias["data"].apply(lambda x: x.strftime("%d/%m/%Y"))
 
-    # ===== Top 5 clientes do mês (exceto Consumidor Final) =====
     df_cli = df_mes.copy()
 
     df_cli = df_cli[df_cli[COL_CLIENTE].astype(str).str.strip() != ""]
