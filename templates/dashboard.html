@@ -82,7 +82,7 @@
       <div class="hint" id="metasResumoDiasPassados" style="margin-top:4px;"></div>
     </section>
 
-    <!-- CARD COMISSÃO (compacto) -->
+    <!-- CARD COMISSÃO (2 COLUNAS) -->
     <section class="card mt" id="cardComissao" style="display:none;">
       <div class="metas-header">
         <div class="metas-title">
@@ -97,52 +97,49 @@
       <div id="comissaoLoading" class="meta" style="display:none; margin-top:10px;">Carregando…</div>
       <div id="comissaoErro" class="meta" style="display:none; margin-top:10px; color:#ffb3b3;"></div>
 
-      <!-- CONTEÚDO COMPACTO (SEM card dentro do card) -->
-      <div style="margin-top:10px; padding:12px;">
-        <div
-          style="
-            display:grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap:10px 14px;
-          "
-        >
-          <!-- LINHA 1 -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Total Venda:</span>
-            <strong class="meta" style="margin:0;" id="comissaoTotalVendas">R$ 0,00</strong>
-          </div>
+      <div class="com-box">
+  <div class="com-grid-lines">
 
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Devolução:</span>
-            <strong class="meta" style="margin:0;" id="comissaoDevolucoes">R$ 0,00</strong>
-          </div>
+    <!-- LINHA 1 -->
+    <div class="com-item">
+      <span class="meta com-label">Total Venda:</span>
+      <strong class="meta com-val" id="comissaoTotalVendas">R$ 0,00</strong>
+    </div>
 
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Venda líquida:</span>
-            <strong class="meta" style="margin:0;" id="comissaoRealizadoLiquido">R$ 0,00</strong>
-          </div>
+    <div class="com-item">
+      <span class="meta com-label">Comissão Fixa:</span>
+      <strong class="meta com-val" id="comissaoFixa">R$ 0,00</strong>
+    </div>
 
-          <!-- LINHA 2 -->
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Comissão Fix:</span>
-            <strong class="meta" style="margin:0;" id="comissaoFixa">R$ 0,00</strong>
-          </div>
+    <!-- LINHA 2 -->
+    <div class="com-item">
+      <span class="meta com-label">Devolução:</span>
+      <strong class="meta com-val" id="comissaoDevolucoes">R$ 0,00</strong>
+    </div>
 
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Meta Variável:</span>
-            <strong class="meta" style="margin:0;" id="comissaoVariavel">R$ 0,00</strong>
-          </div>
+    <div class="com-item">
+      <span class="meta com-label">Meta Variável:</span>
+      <strong class="meta com-val" id="comissaoVariavel">R$ 0,00</strong>
+    </div>
 
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; white-space:nowrap;">
-            <span class="meta" style="margin:0;">Comissão + Meta:</span>
-            <strong class="meta" style="margin:0;" id="comissaoTotal">R$ 0,00</strong>
-          </div>
-        </div>
+    <!-- LINHA 3 -->
+    <div class="com-item">
+      <span class="meta com-label">Venda líquida:</span>
+      <strong class="meta com-val" id="comissaoRealizadoLiquido">R$ 0,00</strong>
+    </div>
 
-        <div class="hint" style="margin-top:8px;">
-          Valores apurados do mês até a data de referência.
-        </div>
-      </div>
+    <div class="com-item">
+      <span class="meta com-label">Comissão + Meta:</span>
+      <strong class="meta com-val" id="comissaoTotal">R$ 0,00</strong>
+    </div>
+
+  </div>
+
+  <div class="hint com-note">
+    Valores apurados do mês até a data de referência.
+  </div>
+</div>
+
     </section>
 
     <!-- ===== KPIs ===== -->
@@ -395,7 +392,7 @@
           liqEl.textContent = data.realizado_liquido_fmt || ("R$ " + brl(data.realizado_liquido));
         }
 
-        // NOVO: comissões (fixa / variável / total)
+        // comissões (fixa / variável / total)
         if(fixaEl){
           fixaEl.textContent = data.comissao_fixa_2pct_fmt || ("R$ " + brl(data.comissao_fixa_2pct));
         }
