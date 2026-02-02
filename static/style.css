@@ -290,6 +290,7 @@ body{
   color: var(--muted);
   font-size: 12px;
 }
+
 /* ===== AJUSTE FINAL HEADER MOBILE ===== */
 @media (max-width: 480px){
   body{
@@ -326,6 +327,7 @@ body{
 .hit-meta{
   background: rgba(0,255,0,0.06);
 }
+
 /* ===== FIX: não quebrar valores (R$ 65.000,00) na tabela de metas ===== */
 .table td,
 .table th{
@@ -342,75 +344,55 @@ body{
 #cardMetasResumo{
   overflow: hidden;
 }
-/* ===== COMISSÃO: GRID 2 COLUNAS ===== */
-.com-grid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;   /* 2 colunas */
-  gap: 10px 26px;                  /* (linhas, colunas) */
-  width: 100%;
-  margin-top: 6px;
-}
 
-.com-col{
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+/* =========================================================
+   COMISSÃO — iPhone SAFE (3 linhas x 2 colunas)
+   - evita "dança" do Safari iOS com space-between
+   ========================================================= */
 
-.com-row{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 22px;
-}
-
-.com-label{
-  opacity: .9;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.com-val{
-  font-weight: 700;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.com-note{
-  margin-top: 10px;
-  font-size: 12px;
-  opacity: .75;
-}
-
-/* Comissão: 3 linhas x 2 colunas (cada linha: esquerda | direita) */
 .com-box{
   margin-top: 10px;
   padding: 12px;
 }
 
+/* 2 colunas: esquerda | direita; 3 linhas (vem do HTML) */
 .com-grid-lines{
   display: grid;
-  grid-template-columns: 1fr 1fr; /* esquerda | direita */
-  gap: 10px 34px;                 /* (linhas, colunas) */
+  grid-template-columns: 1fr 1fr;
+  column-gap: 40px;
+  row-gap: 10px;
   width: 100%;
 }
 
+/* cada item tem 2 sub-colunas fixas: label | valor */
 .com-item{
-  display: flex;
+  display: grid;
+  grid-template-columns: 140px 1fr; /* label fixa | valor */
   align-items: center;
-  justify-content: space-between; /* label na esquerda, valor na direita */
-  gap: 14px;
-  white-space: nowrap;
+  gap: 12px;
   min-width: 0;
 }
 
+/* label */
 .com-label{
   margin: 0;
   opacity: .9;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
+/* valor */
 .com-val{
   margin: 0;
   font-weight: 700;
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* observação */
+.com-note{
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: .75;
 }
